@@ -1,5 +1,9 @@
 # Dirty Rectangle Technique — Canvas 2D
 
+<!-- LINKS:BEGIN — üretildi: scripts/sync-repo-links.py · elle düzenleme -->
+**▶ [Live demo](https://m2-md.github.io/dirty-rectangle-rendering/)** · [Source](https://github.com/m2-md/dirty-rectangle-rendering)
+<!-- LINKS:END -->
+
 Working code for the article "You Don't Have to Wipe the Whole Table: The Dirty
 Rectangle Technique in Canvas 2D". Instead of calling `clearRect(0, 0, W, H)` every
 frame, it clears only the regions that changed and redraws only the objects that
