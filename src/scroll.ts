@@ -1,5 +1,5 @@
-// Tuvali dx kadar kaydır, sadece açılan şeridi kirlet.
-// Kesirli dx'te anti-aliasing hatası birikir; tam sayı şart.
+// Shift canvas by dx, only marking newly exposed strip dirty.
+// Fractional dx accumulates anti-aliasing errors; integer shift required.
 export function scrollCanvas(
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -11,11 +11,11 @@ export function scrollCanvas(
   if (shift === 0) return null;
 
   ctx.save();
-  ctx.globalCompositeOperation = "copy"; // harmanlama yok, birebir kopya
+  ctx.globalCompositeOperation = "copy"; // exact copy, no blending
   ctx.drawImage(ctx.canvas, -shift, 0);
   ctx.restore();
 
   return shift > 0
-    ? { x: width - shift, y: 0, w: shift, h: height } // sağdan yeni şerit
-    : { x: 0, y: 0, w: -shift, h: height }; // soldan yeni şerit
+    ? { x: width - shift, y: 0, w: shift, h: height } // new strip from right
+    : { x: 0, y: 0, w: -shift, h: height }; // new strip from left
 }

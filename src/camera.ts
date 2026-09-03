@@ -14,7 +14,7 @@ export class CameraWatcher {
     this.lastY = camera.y;
   }
 
-  // Kamera kıpırdadıysa dirty-rect'in söyleyecek bir şeyi yok: hepsi kirli.
+  // If camera moved, dirty rectangles cannot help: entire frame is dirty.
   sync(camera: Camera, tracker: DirtyTracker): boolean {
     const moved = camera.x !== this.lastX || camera.y !== this.lastY;
     this.lastX = camera.x;

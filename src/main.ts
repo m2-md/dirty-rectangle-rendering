@@ -30,14 +30,14 @@ let sprites: Sprite[] = [];
 let moving = Number(movingEl.value);
 let tracker = new DirtyTracker(CANVAS, { pad: 1, maxWaste: 2000 });
 const index = new GridIndex<Sprite>(CELL);
-let overlay: Rect[] = []; // önceki karede çizilen çerçeveler
+let overlay: Rect[] = []; // bounding boxes drawn in previous frame
 let needsFullRepaint = true;
 
 function drawSprite(target: CanvasRenderingContext2D, s: Sprite): void {
   target.fillStyle = s.color;
   target.fillRect(s.bounds.x, s.bounds.y, s.bounds.w, s.bounds.h);
-  // Yarım piksel kaydırılmış ince kenar: anti-aliasing'i kasten tetikler,
-  // pad kapalıyken arkada kalan hayalet izi görünür kılar.
+  // Half-pixel offset stroke: intentionally triggers anti-aliasing
+  // to reveal ghost artifacts when pad is disabled.
   target.strokeStyle = "rgba(226, 232, 240, 0.55)";
   target.lineWidth = 1;
   target.strokeRect(
@@ -92,7 +92,7 @@ function frameDirty(dt: number): FrameStats {
     tracker.markAll();
     needsFullRepaint = false;
   }
-  // Çerçeveler kalıcı piksel bıraktı: onları da kirli say.
+  // Outlines left permanent pixels: mark them dirty as well.
   for (const r of overlay) tracker.markRect(r);
   overlay = [];
 
@@ -146,7 +146,7 @@ function tick(now: number): void {
   last = now;
   const mode = modeEl.value as Mode;
 
-  // Mod değişince tuvalleri sıfırla: modlar aynı iki canvas'ı paylaşıyor.
+  // Clear canvases when mode changes: modes share the same two canvases.
   if (needsFullRepaint) {
     ctx.clearRect(0, 0, CANVAS.w, CANVAS.h);
     layers.fg.clearRect(0, 0, CANVAS.w, CANVAS.h);
@@ -166,11 +166,11 @@ function tick(now: number): void {
   const avg = samples.reduce((a, b) => a + b, 0) / samples.length;
 
   hud.innerHTML =
-    `mod         <b>${mode}</b><br>` +
-    `çizilen     <b>${stats.drawn}</b> / ${TOTAL} nesne<br>` +
-    `kirli alan  <b>${((stats.dirtyPixels / CANVAS_AREA) * 100).toFixed(1)}%</b><br>` +
-    `bölge       <b>${stats.regions}</b><br>` +
-    `kare süresi <b>${avg.toFixed(2)} ms</b> (${(1000 / Math.max(avg, 0.001)).toFixed(0)} kare/s tavan)`;
+    `mode        <b>${mode}</b><br>` +
+    `drawn       <b>${stats.drawn}</b> / ${TOTAL} objects<br>` +
+    `dirty area  <b>${((stats.dirtyPixels / CANVAS_AREA) * 100).toFixed(1)}%</b><br>` +
+    `regions     <b>${stats.regions}</b><br>` +
+    `frame time  <b>${avg.toFixed(2)} ms</b> (${(1000 / Math.max(avg, 0.001)).toFixed(0)} fps cap)`;
 
   requestAnimationFrame(tick);
 }

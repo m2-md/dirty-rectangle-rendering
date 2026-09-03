@@ -2,8 +2,8 @@ import { type Rect, clipRect, expandRect, rectArea, snapRect } from "./rect";
 import { mergeRects } from "./merge";
 
 export interface DirtyOptions {
-  pad?: number; // anti-aliasing payı (px)
-  maxWaste?: number; // birleştirmede göze alınan boş alan (px²)
+  pad?: number; // anti-aliasing padding margin (px)
+  maxWaste?: number; // allowed wasted empty space budget during merge (px²)
   maxRegions?: number;
 }
 
@@ -24,12 +24,12 @@ export class DirtyTracker {
   }
 
   markRect(r: Rect): void {
-    if (this.fullyDirty) return; // zaten her şey kirli, kayıt tutmanın anlamı yok
+    if (this.fullyDirty) return; // already fully dirty, recording individual rects is redundant
     const clipped = clipRect(snapRect(expandRect(r, this.pad)), this.bounds);
     if (rectArea(clipped) > 0) this.rects.push(clipped);
   }
 
-  // Hareket eden nesne İKİ yeri birden kirletir: bıraktığını ve gittiğini.
+  // A moving object dirties TWO locations: where it left and where it arrived.
   markMoved(prev: Rect, next: Rect): void {
     this.markRect(prev);
     this.markRect(next);
@@ -42,11 +42,11 @@ export class DirtyTracker {
 
   regions(): Rect[] {
     if (this.fullyDirty) return [{ ...this.bounds }];
-    // Birleştirme çift-çift tarar: girdi kabarınca kendi maliyeti çizimden
-    // pahalıya patlar. Tavanın dört katını aştıysak hiç uğraşma.
+    // Pairwise merge scans all pairs: when inputs explode, merging costs
+    // more than full redraw. If exceeding 4x the cap, bail out immediately.
     if (this.rects.length > this.maxRegions * 4) return [{ ...this.bounds }];
     const merged = mergeRects(this.rects, this.maxWaste);
-    // Çok fazla parçaya bölündüyse tek tam çizim daha ucuzdur.
+    // If fragmented into too many pieces, a single full draw is cheaper.
     if (merged.length > this.maxRegions) return [{ ...this.bounds }];
     return merged;
   }
@@ -60,7 +60,7 @@ export class DirtyTracker {
     return this.rects.length;
   }
 
-  // Birleştirilmemiş ham kirli dikdörtgenler: ölçüm ve hata ayıklama için.
+  // Unmerged raw dirty rectangles: for measurement and debugging.
   pending(): Rect[] {
     return this.rects.map((r) => ({ ...r }));
   }

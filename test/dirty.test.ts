@@ -11,14 +11,14 @@ import { mergeRects } from "../src/merge";
 import { DirtyTracker } from "../src/dirty";
 import { GridIndex, queryBrute, type HasBounds } from "../src/query";
 
-describe("rect matematiği", () => {
-  it("kenardan değen dikdörtgenler kesişmiş sayılmaz", () => {
+describe("rect math", () => {
+  it("edge-touching rectangles are not considered intersecting", () => {
     const a: Rect = { x: 0, y: 0, w: 10, h: 10 };
     expect(rectIntersects(a, { x: 10, y: 0, w: 10, h: 10 })).toBe(false);
     expect(rectIntersects(a, { x: 9, y: 0, w: 10, h: 10 })).toBe(true);
   });
 
-  it("union her iki dikdörtgeni de kapsar", () => {
+  it("union covers both rectangles", () => {
     const a: Rect = { x: 0, y: 0, w: 10, h: 10 };
     const b: Rect = { x: 20, y: 5, w: 10, h: 10 };
     expect(rectUnion(a, b)).toEqual({ x: 0, y: 0, w: 30, h: 15 });
@@ -27,7 +27,7 @@ describe("rect matematiği", () => {
     );
   });
 
-  it("expandRect anti-aliasing payı olarak her yöne 1px büyütür", () => {
+  it("expandRect expands 1px in each direction for anti-aliasing padding", () => {
     expect(expandRect({ x: 10, y: 10, w: 5, h: 5 }, 1)).toEqual({
       x: 9,
       y: 9,
@@ -36,7 +36,7 @@ describe("rect matematiği", () => {
     });
   });
 
-  it("rectIntersectionArea kesişmeyen çiftte 0 döndürür", () => {
+  it("rectIntersectionArea returns 0 for non-intersecting pairs", () => {
     const a: Rect = { x: 0, y: 0, w: 10, h: 10 };
     expect(rectIntersectionArea(a, { x: 20, y: 0, w: 10, h: 10 })).toBe(0);
     expect(rectIntersectionArea(a, { x: 5, y: 5, w: 10, h: 10 })).toBe(25);
@@ -44,7 +44,7 @@ describe("rect matematiği", () => {
 });
 
 describe("mergeRects", () => {
-  it("örtüşenleri tek dikdörtgende birleştirir", () => {
+  it("merges overlapping rectangles into one", () => {
     const merged = mergeRects(
       [
         { x: 0, y: 0, w: 20, h: 20 },
@@ -56,7 +56,7 @@ describe("mergeRects", () => {
     expect(merged[0]).toEqual({ x: 0, y: 0, w: 30, h: 30 });
   });
 
-  it("birbirinden uzak dikdörtgenleri ayrı bırakır", () => {
+  it("leaves distant rectangles separate", () => {
     const merged = mergeRects(
       [
         { x: 0, y: 0, w: 10, h: 10 },
@@ -68,7 +68,7 @@ describe("mergeRects", () => {
     expect(merged.reduce((s, r) => s + rectArea(r), 0)).toBe(200);
   });
 
-  it("birleşmiş bölgeler girdilerin tamamını kapsar", () => {
+  it("merged regions fully contain all input rectangles", () => {
     const input: Rect[] = [
       { x: 0, y: 0, w: 12, h: 12 },
       { x: 8, y: 4, w: 12, h: 12 },
@@ -76,17 +76,17 @@ describe("mergeRects", () => {
     ];
     const merged = mergeRects(input, 0);
     for (const r of input) {
-      // Her girdi, bir çıktının İÇİNDE tamamen yer almalı: kirli piksel kaçmaz.
+      // Every input must be completely contained inside an output: no dirty pixels missed.
       expect(
         merged.some((m) => rectIntersectionArea(m, r) === rectArea(r)),
       ).toBe(true);
     }
   });
 
-  it("israf bütçesi 0 olunca sadece örtüşenler birleşir", () => {
+  it("merges only overlapping rectangles when waste budget is 0", () => {
     const near: Rect[] = [
       { x: 0, y: 0, w: 10, h: 10 },
-      { x: 12, y: 0, w: 10, h: 10 }, // 2px boşluk → 20px² israf
+      { x: 12, y: 0, w: 10, h: 10 }, // 2px gap -> 20px² waste
     ];
     expect(mergeRects(near, 0)).toHaveLength(2);
     expect(mergeRects(near, 20)).toHaveLength(1);
@@ -96,7 +96,7 @@ describe("mergeRects", () => {
 describe("DirtyTracker", () => {
   const bounds: Rect = { x: 0, y: 0, w: 640, h: 360 };
 
-  it("markMoved eski ve yeni konumu birlikte kirletir", () => {
+  it("markMoved dirties both previous and new positions", () => {
     const t = new DirtyTracker(bounds, { pad: 1, maxWaste: 0 });
     t.markMoved(
       { x: 10, y: 10, w: 20, h: 20 },
@@ -112,7 +112,7 @@ describe("DirtyTracker", () => {
     ).toBe(true);
   });
 
-  it("küçük adımda eski ve yeni konum tek bölgede birleşir", () => {
+  it("merges previous and new positions into single region on small steps", () => {
     const t = new DirtyTracker(bounds, { pad: 1, maxWaste: 0 });
     t.markMoved(
       { x: 100, y: 100, w: 20, h: 20 },
@@ -121,7 +121,7 @@ describe("DirtyTracker", () => {
     expect(t.regions()).toHaveLength(1);
   });
 
-  it("bölgeler canvas sınırlarının dışına taşmaz", () => {
+  it("regions do not overflow outside canvas bounds", () => {
     const t = new DirtyTracker(bounds, { maxWaste: 0 });
     t.markRect({ x: -50, y: -50, w: 100, h: 100 });
     const [r] = t.regions();
@@ -130,14 +130,14 @@ describe("DirtyTracker", () => {
     expect(r.x + r.w).toBeLessThanOrEqual(640);
   });
 
-  it("bölge sayısı tavanı aşılınca tam yeniden çizime düşer", () => {
+  it("falls back to full redraw when region count exceeds cap", () => {
     const t = new DirtyTracker(bounds, { pad: 0, maxWaste: 0, maxRegions: 3 });
     for (let i = 0; i < 8; i++)
       t.markRect({ x: i * 70, y: i * 40, w: 10, h: 10 });
     expect(t.regions()).toEqual([bounds]);
   });
 
-  it("markAll her şeyi kirletir ve sonraki markRect'ler yutulur", () => {
+  it("markAll dirties everything and swallows subsequent markRects", () => {
     const t = new DirtyTracker(bounds, { maxWaste: 0 });
     t.markAll();
     t.markRect({ x: 5, y: 5, w: 5, h: 5 });
@@ -145,7 +145,7 @@ describe("DirtyTracker", () => {
     expect(t.pendingCount).toBe(1);
   });
 
-  it("clear sonrası kirli bölge kalmaz", () => {
+  it("leaves no dirty regions after clear", () => {
     const t = new DirtyTracker(bounds);
     t.markRect({ x: 5, y: 5, w: 5, h: 5 });
     t.clear();
@@ -174,17 +174,17 @@ function scene(n: number, seed: number): TestSprite[] {
   }));
 }
 
-describe("kirli bölgeye değen nesne sorgusu", () => {
-  it("grid sorgusu brute-force ile birebir aynı kümeyi verir", () => {
+describe("spatial query for objects touching dirty regions", () => {
+  it("grid query matches brute-force set exactly", () => {
     const items = scene(400, 9);
     const grid = new GridIndex<TestSprite>(64);
     for (const it of items) grid.insert(it);
 
     const regions: Rect[] = [
-      { x: 0, y: 0, w: 50, h: 50 }, // köşe
-      { x: 200, y: 120, w: 90, h: 40 }, // orta
-      { x: 610, y: 330, w: 30, h: 30 }, // kenardan taşan
-      { x: 0, y: 0, w: 640, h: 360 }, // tam ekran
+      { x: 0, y: 0, w: 50, h: 50 }, // corner
+      { x: 200, y: 120, w: 90, h: 40 }, // middle
+      { x: 610, y: 330, w: 30, h: 30 }, // overflowing edge
+      { x: 0, y: 0, w: 640, h: 360 }, // full screen
     ];
     for (const region of regions) {
       const fromGrid = grid
@@ -198,7 +198,7 @@ describe("kirli bölgeye değen nesne sorgusu", () => {
     }
   });
 
-  it("negatif koordinatlı bölgede de brute-force ile aynı sonucu verir", () => {
+  it("matches brute-force even with negative coordinate regions", () => {
     const items = scene(300, 17);
     const grid = new GridIndex<TestSprite>(48);
     for (const it of items) grid.insert(it);
@@ -213,7 +213,7 @@ describe("kirli bölgeye değen nesne sorgusu", () => {
     expect(fromGrid).toEqual(brute);
   });
 
-  it("aynı nesneyi iki kez döndürmez", () => {
+  it("does not return duplicate objects", () => {
     const items = scene(200, 3);
     const grid = new GridIndex<TestSprite>(32);
     for (const it of items) grid.insert(it);

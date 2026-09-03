@@ -13,11 +13,11 @@ export function createLayers(
 ): Layers {
   const bg = bgCanvas.getContext("2d");
   const fg = fgCanvas.getContext("2d");
-  if (!bg || !fg) throw new Error("2d context alınamadı");
+  if (!bg || !fg) throw new Error("Failed to acquire 2D context");
   return { bg, fg, width: bgCanvas.width, height: bgCanvas.height };
 }
 
-// Statik katman: sahne kurulunca ve resize'da BİR KEZ çizilir.
+// Static layer: drawn ONCE when scene is initialized or resized.
 export function paintStatic(
   layers: Layers,
   statics: Sprite[],
@@ -27,8 +27,8 @@ export function paintStatic(
   for (const sprite of statics) drawSprite(layers.bg, sprite);
 }
 
-// Hareketli katman: her kare tamamen temizlenir, ama içinde sadece
-// birkaç nesne var; 2.000 değil.
+// Dynamic layer: fully cleared every frame, but only contains
+// a few moving objects rather than thousands.
 export function paintDynamic(
   layers: Layers,
   movers: Sprite[],

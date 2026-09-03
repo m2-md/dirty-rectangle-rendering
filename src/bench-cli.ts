@@ -13,27 +13,27 @@ function row(label: string, r: SimResult, extra = ""): string {
     label.padEnd(9) +
     "→ " +
     pad(r.regionsPerFrame.toFixed(1), 5) +
-    " bölge  " +
-    pad("%" + (r.dirtyRatio * 100).toFixed(1), 6) +
-    " kirli  " +
+    " regions  " +
+    pad((r.dirtyRatio * 100).toFixed(1) + "%", 6) +
+    " dirty  " +
     pad(r.drawnPerFrame.toFixed(1), 6) +
-    " çizim" +
+    " draw" +
     extra
   );
 }
 
 console.log(
-  `birleştirme kuralı (${TOTAL} nesne, 40 hareketli, ${FRAMES} kare, 640x360)`,
+  `merge strategy (${TOTAL} objects, 40 moving, ${FRAMES} frames, 640x360)`,
 );
 console.log(
   row(
-    "yok",
+    "none",
     simulate(TOTAL, 40, { maxWaste: 0, maxRegions: 1000, frames: FRAMES }),
   ),
 );
 console.log(
   row(
-    "oran 1.5",
+    "ratio 1.5",
     simulate(TOTAL, 40, {
       strategy: "ratio",
       maxRegions: 1000,
@@ -44,10 +44,10 @@ console.log(
 
 console.log("");
 console.log(
-  `maxWaste sweep (${TOTAL} nesne, 40 hareketli, ${FRAMES} kare, 640x360)`,
+  `maxWaste sweep (${TOTAL} objects, 40 moving, ${FRAMES} frames, 640x360)`,
 );
 for (const w of [0, 500, 2000, 8000, 32000, Infinity]) {
-  // maxRegions tavanı devre dışı: maxWaste'in saf etkisi ölçülsün.
+  // Disable maxRegions cap: measure pure impact of maxWaste.
   const r = simulate(TOTAL, 40, {
     maxWaste: w,
     maxRegions: 1000,
@@ -57,16 +57,16 @@ for (const w of [0, 500, 2000, 8000, 32000, Infinity]) {
 }
 
 console.log("");
-console.log(`moving sweep (maxWaste 2000, maxRegions 24, ${FRAMES} kare)`);
+console.log(`moving sweep (maxWaste 2000, maxRegions 24, ${FRAMES} frames)`);
 for (const m of [5, 20, 40, 100, 200, 400, 2000]) {
   const r = simulate(TOTAL, m, { maxWaste: 2000, frames: FRAMES });
   const ratio = ((r.drawnPerFrame / TOTAL) * 100).toFixed(0);
-  const label = `${m} (%${((m / TOTAL) * 100).toFixed(2).replace(/\.?0+$/, "")})`;
+  const label = `${m} (${((m / TOTAL) * 100).toFixed(2).replace(/\.?0+$/, "")}%)`;
   console.log(
     row(
       label,
       r,
-      `  tam çizime göre %${ratio}  takip ${r.overheadMsPerFrame.toFixed(3)} ms/kare`,
+      `  vs full redraw ${ratio}%  tracking ${r.overheadMsPerFrame.toFixed(3)} ms/frame`,
     ),
   );
 }

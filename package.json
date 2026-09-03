@@ -1,7 +1,7 @@
 {
   "name": "dirty-rectangle-rendering",
   "version": "1.0.0",
-  "description": "Canvas 2D'de kirli dikdörtgen (dirty rectangle) tekniği: sadece değişen bölgeleri temizle ve yeniden çiz",
+  "description": "Dirty rectangle rendering optimization for HTML5 Canvas: computing minimal bounding box redraw regions to avoid clearing and rendering the entire canvas frame.",
   "type": "module",
   "license": "MIT",
   "scripts": {

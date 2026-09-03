@@ -1,130 +1,138 @@
-# Kirli Dikdörtgen Tekniği — Canvas 2D
+# Dirty Rectangle Technique — Canvas 2D
 
-"Bütün Masayı Silmeye Gerek Yok: Canvas 2D'de Kirli Dikdörtgen Tekniği" makalesinin
-çalışan kodu. Her karede `clearRect(0, 0, W, H)` yapmak yerine yalnızca değişmiş
-bölgeleri temizler ve sadece o bölgelere değen nesneleri yeniden çizer.
+Working code for the article "You Don't Have to Wipe the Whole Table: The Dirty
+Rectangle Technique in Canvas 2D". Instead of calling `clearRect(0, 0, W, H)` every
+frame, it clears only the regions that changed and redraws only the objects that
+touch those regions.
 
-`src/query.ts` içindeki `GridIndex`, `broad-phase-collision-spatial-hash` projesindeki
-`SpatialHashGrid` ile aynı fikrin (uniform spatial hash) farklı amaçlı varyantıdır:
-orada "çarpışma adayı çift üret", burada "bu dikdörtgene hangi nesneler değiyor".
+`GridIndex` in `src/query.ts` is a differently purposed variant of the same idea
+(uniform spatial hash) as `SpatialHashGrid` in the `broad-phase-collision-spatial-hash`
+project: there it is "produce candidate collision pairs", here it is "which objects
+touch this rectangle".
 
-## İçerik
+## Contents
 
-- `src/rect.ts` — `Rect` + saf dikdörtgen matematiği: `rectIntersects` (yarı-açık
-  aralık), `rectUnion`, `rectArea`, `rectIntersectionArea`, `expandRect` (anti-aliasing
-  payı), `snapRect` (dışa yuvarlama), `clipRect`.
-- `src/merge.ts` — `mergeWaste` + `mergeRects`: her turda en az israf eden çifti
-  birleştirir, örtüşenler eşikten muaf. `mergeRectsRatio` ise ölçümde kaybeden ilk
-  (oran eşikli) sürüm; sadece bench karşılaştırması için duruyor.
-- `src/dirty.ts` — `DirtyTracker`: `markRect`, `markMoved` (eski + yeni konum),
-  `markAll` kaçış kapısı, `regions()`, `pending()`.
-- `src/query.ts` — `queryBrute` (referans doğru) + `GridIndex<T>` uzamsal indeks.
-- `src/render.ts` — `drawRegion`: `save` → `clip` → `clearRect` → çiz → `restore`.
-- `src/loop.ts` — `makeFrame`: güncelle+kirlet → indeksi tam doldur → bölgeleri çiz.
-- `src/camera.ts`, `src/scroll.ts` — kamera kayınca tekniğin neden çöktüğü ve
-  self-blit ile şerit kaydırma. Demoda kullanılmaz (yazı bu yolu önermiyor).
-- `src/layers.ts` — katmanlı canvas alternatifi: `paintStatic` / `paintDynamic`.
-- `src/bench.ts` + `src/bench-cli.ts` — tohumlu sahne (mulberry32) ve deterministik
-  ölçüm; makaledeki tabloları üretir.
-- `src/main.ts` + `index.html` — canlı demo, HUD ve kirli bölge görselleştirmesi.
+- `src/rect.ts` — `Rect` + pure rectangle math: `rectIntersects` (half-open
+  interval), `rectUnion`, `rectArea`, `rectIntersectionArea`, `expandRect`
+  (anti-aliasing padding), `snapRect` (rounding outwards), `clipRect`.
+- `src/merge.ts` — `mergeWaste` + `mergeRects`: each round merges the pair that
+  wastes the least; overlapping ones are exempt from the threshold. `mergeRectsRatio`
+  is the first version (ratio threshold) that lost in the measurements; it stays
+  around only for the bench comparison.
+- `src/dirty.ts` — `DirtyTracker`: `markRect`, `markMoved` (old + new position),
+  the `markAll` escape hatch, `regions()`, `pending()`.
+- `src/query.ts` — `queryBrute` (the reference truth) + the `GridIndex<T>` spatial index.
+- `src/render.ts` — `drawRegion`: `save` → `clip` → `clearRect` → draw → `restore`.
+- `src/loop.ts` — `makeFrame`: update+dirty → fill the index completely → draw the regions.
+- `src/camera.ts`, `src/scroll.ts` — why the technique collapses when the camera
+  scrolls, and strip scrolling with self-blit. Not used in the demo (the article
+  does not recommend this route).
+- `src/layers.ts` — the layered canvas alternative: `paintStatic` / `paintDynamic`.
+- `src/bench.ts` + `src/bench-cli.ts` — seeded scene (mulberry32) and deterministic
+  measurement; produces the tables in the article.
+- `src/main.ts` + `index.html` — live demo, HUD and dirty region visualization.
 
-## Kurulum
+## Setup
 
 ```bash
 npm install
 ```
 
-## Çalıştırma
+## Running
 
-> ⚠️ **`index.html`'i çift tıklayıp doğrudan açma.** Sayfa bir TypeScript modülü
-> (`<script type="module" src="/src/main.ts">`) yükler; `file://` ile boş ekran
-> görürsün. Vite dev sunucusu çalıştırmanın tek yolu.
+> ⚠️ **Don't double-click `index.html` and open it directly.** The page loads a
+> TypeScript module (`<script type="module" src="/src/main.ts">`); with `file://`
+> you get a blank screen. Running the Vite dev server is the only way.
 
-### Canlı demo
+### Live demo
 
 ```bash
 npm run dev
 ```
 
-`http://localhost:5173/` açılır. 2.000 nesnelik sahne, varsayılan 20 tanesi hareketli.
-Kontroller:
+`http://localhost:5173/` opens. A scene of 2,000 objects, 20 of them moving by
+default. Controls:
 
-- **mod** — `dirty-rect` / `full-redraw` / `layered`.
-- **hareketli** — 0–400 hareketli nesne.
-- **maxWaste** — birleştirmede göze alınan boş alan bütçesi (px²).
-- **kirli bölgeleri çerçevele** — her kirli bölgeyi kırmızı çerçeveyle gösterir.
-- **AA payı (1px)** — kirli dikdörtgeni 1px şişirir.
+- **mode** — `dirty-rect` / `full-redraw` / `layered`.
+- **moving** — 0–400 moving objects.
+- **maxWaste** — the empty-area budget tolerated during merging (px²).
+- **outline dirty regions** — outlines every dirty region with a red frame.
+- **AA padding (1px)** — inflates the dirty rectangle by 1px.
 
-HUD'da mod, çizilen nesne / toplam, kirli alan yüzdesi, bölge sayısı ve son 30 karenin
-ortalama kare süresi var.
+The HUD shows the mode, objects drawn / total, dirty area percentage, region count
+and the average frame time over the last 30 frames.
 
-Denemeye değer üç şey:
+Three things worth trying:
 
-1. `dirty-rect` modunda 20 hareketli: çizilen ~260 / 2000, kirli alan ~%5.
-   `full-redraw`'a geçince 2000 / 2000 ve %100.
-2. **hareketli** kaydırıcısını 100'e çekin: dirty-rect tek tam-ekran bölgeye düşer,
-   HUD %100 kirli gösterir. Sistem kendini kapatmıştır — makaledeki dürüstlük
-   iddiasının görsel kanıtı.
-3. **AA payı** kutusunu kapatın: kirli dikdörtgen tam geometrik sınıra kırpılır ve
-   hareketli nesnelerin arkasında anti-aliasing artığı soluk bir iz kalır.
+1. In `dirty-rect` mode with 20 moving: ~260 / 2000 drawn, ~5% dirty area.
+   Switch to `full-redraw` and it becomes 2000 / 2000 and 100%.
+2. Drag the **moving** slider to 100: dirty-rect collapses into a single
+   full-screen region and the HUD shows 100% dirty. The system has switched itself
+   off — the visual proof of the honesty claim in the article.
+3. Uncheck the **AA padding** box: the dirty rectangle is clipped to the exact
+   geometric bounds and a faint anti-aliasing artifact trail is left behind the
+   moving objects.
 
-Not: çerçeveleme açıkken çizilen kırmızı kutular tuvale kalıcı piksel yazar; bu yüzden
-bir sonraki karede `markRect` ile yeniden kirletilirler (yoksa ekranda birikirler).
+Note: when outlining is on, the red boxes drawn write permanent pixels to the
+canvas; that is why they are dirtied again with `markRect` on the next frame
+(otherwise they would accumulate on screen).
 
-### Testler
+### Tests
 
 ```bash
 npm test
 ```
 
-17 test, hepsi saf mantık — DOM ya da canvas gerekmez. En kritik ikisi: birleştirme
-sonrası her girdi dikdörtgeninin bir çıktının **içinde tamamen** kalması (kirli piksel
-kaçmaz) ve `GridIndex.query` sonucunun `queryBrute` ile **birebir** aynı olması.
+17 tests, all pure logic — no DOM or canvas needed. The two most critical ones:
+that after merging every input rectangle stays **entirely inside** one of the
+outputs (no dirty pixel escapes), and that the result of `GridIndex.query` is
+**exactly** the same as `queryBrute`.
 
-### Ölçüm
+### Measurement
 
 ```bash
 npm run bench
 ```
 
-Makaledeki üç tabloyu üretir (tohumlu, deterministik; makine hızından bağımsız —
-tek makineye bağlı sütun `takip ms/kare`). Gerçek çıktı:
+Produces the three tables in the article (seeded, deterministic; independent of
+machine speed — the only machine-dependent column is `tracking ms/frame`). Actual
+output:
 
 ```
-birleştirme kuralı (2000 nesne, 40 hareketli, 300 kare, 640x360)
-  yok      →  34.8 bölge    %6.3 kirli   415.8 çizim
-  oran 1.5 →  32.1 bölge    %8.4 kirli   446.5 çizim
+merge strategy (2000 objects, 40 moving, 300 frames, 640x360)
+  none     →  34.8 regions    6.3% dirty   415.8 draw
+  ratio 1.5→  32.1 regions    8.4% dirty   446.5 draw
 
-maxWaste sweep (2000 nesne, 40 hareketli, 300 kare, 640x360)
-  0        →  34.8 bölge    %6.3 kirli   415.8 çizim
-  500      →  31.9 bölge    %6.7 kirli   414.7 çizim
-  2000     →  20.9 bölge   %12.5 kirli   521.1 çizim
-  8000     →  10.4 bölge   %31.1 kirli   885.5 çizim
-  32000    →   1.4 bölge   %89.8 kirli  1899.5 çizim
-  Infinity →   1.0 bölge   %94.1 kirli  1965.1 çizim
+maxWaste sweep (2000 objects, 40 moving, 300 frames, 640x360)
+  0        →  34.8 regions    6.3% dirty   415.8 draw
+  500      →  31.9 regions    6.7% dirty   414.7 draw
+  2000     →  20.9 regions   12.5% dirty   521.1 draw
+  8000     →  10.4 regions   31.1% dirty   885.5 draw
+  32000    →   1.4 regions   89.8% dirty  1899.5 draw
+  Infinity →   1.0 regions   94.1% dirty  1965.1 draw
 
-moving sweep (maxWaste 2000, maxRegions 24, 300 kare)
-  5 (%0.25)  →   4.6 bölge    %1.0 kirli    52.7 çizim  tam çizime göre %3    takip 0.006 ms/kare
-  20 (%1)    →  14.6 bölge    %5.2 kirli   260.2 çizim  tam çizime göre %13   takip 0.254 ms/kare
-  40 (%2)    →  20.9 bölge   %12.5 kirli   521.1 çizim  tam çizime göre %26   takip 1.903 ms/kare
-  100 (%5)   →   1.0 bölge  %100.0 kirli  2000.0 çizim  tam çizime göre %100  takip 0.015 ms/kare
-  200 (%10)  →   1.0 bölge  %100.0 kirli  2000.0 çizim  tam çizime göre %100  takip 0.029 ms/kare
-  400 (%20)  →   1.0 bölge  %100.0 kirli  2000.0 çizim  tam çizime göre %100  takip 0.058 ms/kare
-  2000 (%100)→   1.0 bölge  %100.0 kirli  2000.0 çizim  tam çizime göre %100  takip 0.294 ms/kare
+moving sweep (maxWaste 2000, maxRegions 24, 300 frames)
+  5 (0.25%)→   4.6 regions    1.0% dirty    52.7 draw  vs full redraw 3%  tracking 0.006 ms/frame
+  20 (1%)  →  14.6 regions    5.2% dirty   260.2 draw  vs full redraw 13%  tracking 0.254 ms/frame
+  40 (2%)  →  20.9 regions   12.5% dirty   521.1 draw  vs full redraw 26%  tracking 1.903 ms/frame
+  100 (5%) →   1.0 regions  100.0% dirty  2000.0 draw  vs full redraw 100%  tracking 0.015 ms/frame
+  200 (10%)→   1.0 regions  100.0% dirty  2000.0 draw  vs full redraw 100%  tracking 0.029 ms/frame
+  400 (20%)→   1.0 regions  100.0% dirty  2000.0 draw  vs full redraw 100%  tracking 0.058 ms/frame
+  2000 (100%)→   1.0 regions  100.0% dirty  2000.0 draw  vs full redraw 100%  tracking 0.294 ms/frame
 ```
 
-Okuma kılavuzu: hareketli oran %2'ye kadar dirty-rect net kazandırır. %5'te
-`maxRegions` kaçış kapısı devreye girer ve teknik kendini kapatır; %100 hareketlide
-dirty-rect **kaybeder** — tam çizimin yaptığı işin aynısını yapar, üstüne kare başına
-0,29 ms takip maliyeti öder.
+How to read it: up to a 2% moving ratio dirty-rect is a clear win. At 5% the
+`maxRegions` escape hatch kicks in and the technique switches itself off; with 100%
+moving dirty-rect **loses** — it does exactly the same work as a full redraw and on
+top of that pays 0.29 ms of tracking cost per frame.
 
-### Tip denetimi ve derleme
+### Type checking and build
 
 ```bash
 npm run typecheck   # tsc --noEmit, strict
 npm run build       # tsc && vite build
 ```
 
-## Lisans
+## License
 
 MIT

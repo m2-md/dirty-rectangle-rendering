@@ -17,7 +17,7 @@ export function makeFrame(
   return function frame(dt: number) {
     tracker.clear();
 
-    // 1. Güncelle ve kirlet
+    // 1. Update and mark dirty
     for (const sprite of sprites) {
       if (sprite.vx === 0 && sprite.vy === 0) continue;
       const prev = { ...sprite.bounds };
@@ -29,12 +29,12 @@ export function makeFrame(
       tracker.markMoved(prev, sprite.bounds);
     }
 
-    // 2. Uzamsal indeksi tazele (hepsi, sadece hareketliler değil:
-    //    durağan nesneler de kirli bölgeye değebilir)
+    // 2. Refresh spatial index (all objects, not just moving ones:
+    //    static objects may touch dirty regions too)
     index.clear();
     for (const sprite of sprites) index.insert(sprite);
 
-    // 3. Sadece kirli bölgeleri çiz
+    // 3. Render only dirty regions
     let drawn = 0;
     let dirtyPixels = 0;
     for (const region of tracker.regions()) {

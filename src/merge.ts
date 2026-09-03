@@ -6,7 +6,7 @@ import {
   rectUnion,
 } from "./rect";
 
-// Birleştirirsek kaç piksel boşuna temizlenir?
+// How many empty pixels would be redundantly cleared if merged?
 export function mergeWaste(a: Rect, b: Rect): number {
   const covered = rectArea(a) + rectArea(b) - rectIntersectionArea(a, b);
   return rectArea(rectUnion(a, b)) - covered;
@@ -24,7 +24,7 @@ export function mergeRects(rects: Rect[], maxWaste = 0): Rect[] {
 
     for (let i = 0; i < out.length; i++) {
       for (let j = i + 1; j < out.length; j++) {
-        // Örtüşenler koşulsuz birleşir: iki kez temizlemenin anlamı yok.
+        // Overlapping rects merge unconditionally: no point clearing twice.
         if (rectIntersects(out[i], out[j])) {
           bi = i;
           bj = j;
@@ -50,8 +50,8 @@ export function mergeRects(rects: Rect[], maxWaste = 0): Rect[] {
   return out;
 }
 
-// İLK (kötü) sürüm: eşik oran. Ölçümde kaybettiği için repoda sadece
-// bench karşılaştırması olarak duruyor — üretimde mergeRects kullanın.
+// Naive legacy version: ratio threshold. Kept in repo only for
+// benchmark comparison — use mergeRects in production.
 export function mergeRectsRatio(rects: Rect[], maxGrowth = 1.5): Rect[] {
   const out: Rect[] = rects.map((r) => ({ ...r }));
 
@@ -61,7 +61,7 @@ export function mergeRectsRatio(rects: Rect[], maxGrowth = 1.5): Rect[] {
     outer: for (let i = 0; i < out.length; i++) {
       for (let j = i + 1; j < out.length; j++) {
         const union = rectUnion(out[i], out[j]);
-        // Kartopu: birleşen dikdörtgen büyüdükçe bu eşik de büyür.
+        // Snowball: as merged rectangle grows, this threshold also grows.
         if (
           rectArea(union) <=
           maxGrowth * (rectArea(out[i]) + rectArea(out[j]))

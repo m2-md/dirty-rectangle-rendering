@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kirli Dikdörtgen Tekniği — Canvas 2D</title>
+    <title>Dirty Rectangle Rendering Optimization for Canvas 2D</title>
     <style>
       body {
         margin: 0;
@@ -69,9 +69,9 @@
     </style>
   </head>
   <body>
-    <h1>Kirli dikdörtgen tekniği — sadece değişen yeri sil</h1>
+    <h1>Dirty rectangle rendering — clear only what changed</h1>
 
-    <!-- Katmanlı canvas: alt katman statik, üst katman hareketliler -->
+    <!-- Layered canvas: bottom layer static, top layer moving -->
     <div class="stage">
       <canvas id="bg" width="640" height="360"></canvas>
       <canvas id="fg" width="640" height="360"></canvas>
@@ -79,7 +79,7 @@
 
     <div class="panel">
       <label>
-        mod
+        mode
         <select id="mode">
           <option value="dirty-rect">dirty-rect</option>
           <option value="full-redraw">full-redraw</option>
@@ -87,7 +87,7 @@
         </select>
       </label>
       <label>
-        hareketli <input id="moving" type="range" min="0" max="400" value="20" />
+        moving <input id="moving" type="range" min="0" max="400" value="20" />
         <span id="movingOut">20</span>
       </label>
       <label>
@@ -96,18 +96,18 @@
         <span id="maxWasteOut">2000</span>
       </label>
       <label>
-        <input id="visualize" type="checkbox" /> kirli bölgeleri çerçevele
+        <input id="visualize" type="checkbox" /> outline dirty regions
       </label>
-      <label><input id="pad" type="checkbox" checked /> AA payı (1px)</label>
+      <label><input id="pad" type="checkbox" checked /> AA padding (1px)</label>
     </div>
 
     <div id="hud"></div>
 
     <p class="hint">
-      <b>pad</b> kutusunu kapatın: kirli dikdörtgen tam geometrik sınıra kırpılır ve
-      hareketli nesnelerin arkasında anti-aliasing artığı soluk bir iz kalır. Çerçeveleme
-      açıkken çizilen kırmızı kutular bir sonraki karede kirli sayılır, yoksa ekranda
-      birikirler.
+      Uncheck <b>pad</b>: the dirty rectangle is clipped to exact geometric bounds,
+      leaving faint anti-aliasing artifacts behind moving objects. When visualization is
+      enabled, red outline boxes are marked dirty in the subsequent frame so they do not
+      accumulate on screen.
     </p>
 
     <script type="module" src="/src/main.ts"></script>

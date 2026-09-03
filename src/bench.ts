@@ -6,7 +6,7 @@ import type { Sprite } from "./scene";
 
 export const CANVAS: Rect = { x: 0, y: 0, w: 640, h: 360 };
 
-// mulberry32: tohumlu, hızlı, deterministik.
+// mulberry32: seeded, fast, deterministic PRNG.
 export function makeRng(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
@@ -19,7 +19,7 @@ export function makeRng(seed: number): () => number {
 
 const COLORS = ["#38bdf8", "#f472b6", "#facc15", "#4ade80", "#a78bfa"];
 
-// İlk `moving` sprite hareketli, geri kalanı durağan.
+// First `moving` sprites are dynamic, remaining are static.
 export function makeScene(total: number, moving: number, seed = 1): Sprite[] {
   const rand = makeRng(seed);
   const sprites: Sprite[] = [];
@@ -43,7 +43,7 @@ export function makeScene(total: number, moving: number, seed = 1): Sprite[] {
   return sprites;
 }
 
-// Duvardan seken hareket; sprite tuvalin içinde kalır.
+// Bouncing motion off borders; sprite stays within canvas.
 export function stepSprite(s: Sprite, dt: number): void {
   let x = s.bounds.x + s.vx * dt;
   let y = s.bounds.y + s.vy * dt;
@@ -68,12 +68,12 @@ export interface SimResult {
   regionsPerFrame: number;
   dirtyRatio: number; // 0..1
   drawnPerFrame: number;
-  overheadMsPerFrame: number; // kirletme + birleştirme, çizim hariç
+  overheadMsPerFrame: number; // marking + merging overhead, excluding draw
   total: number;
 }
 
 export interface SimOptions {
-  strategy?: "waste" | "ratio"; // "ratio" = kartopu yapan ilk sürüm
+  strategy?: "waste" | "ratio"; // "ratio" = legacy snowballing version
   maxWaste?: number;
   maxRegions?: number;
   frames?: number;
@@ -83,8 +83,8 @@ export interface SimOptions {
   dt?: number;
 }
 
-// Çizim yok, sayım var: bölge sayısı, kirli piksel oranı ve
-// kirli bölgelere değdiği için yeniden çizilmesi gereken nesne sayısı.
+// Measurement without rendering: tracks region count, dirty pixel ratio,
+// and number of objects intersecting dirty regions to redraw.
 export function simulate(
   total: number,
   moving: number,

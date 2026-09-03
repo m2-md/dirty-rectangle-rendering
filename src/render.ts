@@ -11,12 +11,12 @@ export function drawRegion(
   ctx.save();
   ctx.beginPath();
   ctx.rect(region.x, region.y, region.w, region.h);
-  ctx.clip(); // dışarı taşma yok
-  ctx.clearRect(region.x, region.y, region.w, region.h); // sadece bu kare temizlenir
+  ctx.clip(); // prevent overflow
+  ctx.clearRect(region.x, region.y, region.w, region.h); // only this region is cleared
 
   const touching = index.query(region);
   for (const sprite of touching) drawSprite(ctx, sprite);
 
-  ctx.restore(); // clip'i geri al, bir sonraki bölge kendi kırpmasını kursun
-  return touching.length; // ölçüm için: bu bölgede kaç nesne çizdik
+  ctx.restore(); // restore clip so next region sets its own clipping bounds
+  return touching.length; // for stats: how many objects drawn in this region
 }
