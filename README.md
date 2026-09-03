@@ -4,6 +4,9 @@
 **▶ [Live demo](https://m2-md.github.io/dirty-rectangle-rendering/)** · [Source](https://github.com/m2-md/dirty-rectangle-rendering)
 <!-- LINKS:END -->
 
+> Dirty rectangle rendering optimization for HTML5 Canvas: computing minimal bounding
+> box redraw regions to avoid clearing and rendering the entire canvas every frame.
+
 Working code for the article "You Don't Have to Wipe the Whole Table: The Dirty
 Rectangle Technique in Canvas 2D". Instead of calling `clearRect(0, 0, W, H)` every
 frame, it clears only the regions that changed and redraws only the objects that
@@ -44,7 +47,7 @@ npm install
 
 ## Running
 
-> ⚠️ **Don't double-click `index.html` and open it directly.** The page loads a
+> **Don't double-click `index.html` and open it directly.** The page loads a
 > TypeScript module (`<script type="module" src="/src/main.ts">`); with `file://`
 > you get a blank screen. Running the Vite dev server is the only way.
 
@@ -136,6 +139,13 @@ top of that pays 0.29 ms of tracking cost per frame.
 npm run typecheck   # tsc --noEmit, strict
 npm run build       # tsc && vite build
 ```
+
+## Tech stack
+
+- TypeScript
+- Vite / vite-node
+- Vitest
+- HTML5 Canvas 2D
 
 ## License
 
