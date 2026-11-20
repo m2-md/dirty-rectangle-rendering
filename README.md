@@ -1,11 +1,25 @@
-# Dirty Rectangle Technique — Canvas 2D
+# No Need to Wipe the Whole Table — Dirty Rectangle Rendering in Canvas 2D
 
-<!-- LINKS:BEGIN — üretildi: scripts/sync-repo-links.py · elle düzenleme -->
-**▶ [Live demo](https://m2-md.github.io/dirty-rectangle-rendering/)** · [Source](https://github.com/m2-md/dirty-rectangle-rendering)
-<!-- LINKS:END -->
+[![Live Demo](https://img.shields.io/badge/▶_Live_Demo-Dirty_Rect_Visualizer-38bdf8?style=for-the-badge)](https://m2-md.github.io/dirty-rectangle-rendering/)
+[![Read Free on Medium](https://img.shields.io/badge/Read_Deep_Dive-Free_Friend_Link-10b981?style=for-the-badge&logo=medium)](https://medium.com/@mkare/no-need-to-wipe-the-whole-table-dirty-rectangle-rendering-in-canvas-2d-50de001bf7b1?sk=8798d90f87a4c6b379f6d18dc68fe93b)
+[![Get Starter Kit](https://img.shields.io/badge/Starter_Kit-Buy_Me_a_Coffee-f59e0b?style=for-the-badge&logo=buymeacoffee&logoColor=white)](https://www.buymeacoffee.com/mkare/e/599265)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](./tsconfig.json)
 
-> Dirty rectangle rendering optimization for HTML5 Canvas: computing minimal bounding
-> box redraw regions to avoid clearing and rendering the entire canvas every frame.
+![Dirty Rectangle Rendering Canvas 2D Demo](assets/demo.gif)
+
+> Dirty rectangle rendering optimization for HTML5 Canvas 2D: cut redraws by 97% by clearing only what changed, using `DirtyTracker`, `ctx.clip()`, a spatial `GridIndex`, and deterministic benchmarks.
+
+## 2D Canvas & Game Physics Series
+
+| Part | Topic | Live Demo | Free Guide (Friend Link) |
+| :--- | :--- | :--- | :--- |
+| **Part 1** | **2D Rigid-Body Physics & Slingshot** | [▶ Play Demo](https://m2-md.github.io/canvas-physics-from-scratch/) | [📖 Read Free](https://javascript.plainenglish.io/how-game-physics-works-building-a-2d-physics-engine-from-scratch-in-canvas-5cd26416ddb8?source=friends_link&sk=f9c8048fe5b2d513b3c0d26127e97fb4) |
+| **Part 2** | **HiDPI Canvas & `devicePixelRatio`** | [▶ Live Comparison](https://m2-md.github.io/hidpi-canvas-devicepixelratio/) | [📖 Read Free](https://javascript.plainenglish.io/why-does-canvas-look-blurry-on-retina-displays-devicepixelratio-and-the-tale-of-two-sizes-2be8f6e6f7f8?source=friends_link&sk=3c3af29a65f3d3238efd567f24c20b00) |
+| **Part 3** | **Fixed Timestep & Render Interpolation** | [▶ Live Metronome](https://m2-md.github.io/fixed-timestep-render-interpolation/) | [📖 Read Free](https://javascript.plainenglish.io/metronome-physics-fixed-timestep-game-loops-and-render-interpolation-in-typescript-cdf54ec5ea11?source=friends_link&sk=ff5390a11e2d97b29e82dc41a6572272) |
+| **Part 4** | **Object Pools & Zero-Allocation Loops** | [▶ Pooled vs Unpooled](https://m2-md.github.io/object-pools-zero-allocation/) | [📖 Read Free](https://medium.com/@mkare/return-the-cart-clear-the-exit-object-pools-and-zero-allocation-loops-in-canvas-4051c97ff8a7?source=friends_link&sk=2ed006e6c639a47b92eb324d11a664a6) |
+| **Part 5** | **Dirty Rectangle Rendering in Canvas 2D** *(this repo)* | [▶ Dirty Rect Visualizer](https://m2-md.github.io/dirty-rectangle-rendering/) | [📖 Read Free](https://medium.com/@mkare/no-need-to-wipe-the-whole-table-dirty-rectangle-rendering-in-canvas-2d-50de001bf7b1?sk=8798d90f87a4c6b379f6d18dc68fe93b) |
+
+> 📦 **Want the bundled TypeScript Starter Kit + cheatsheets?** Grab the [TS 2D Canvas Physics & HiDPI Starter Kit](https://www.buymeacoffee.com/mkare/e/599265) (or unlock it free with a [Buy Me a Coffee membership](https://www.buymeacoffee.com/mkare)).
 
 Working code for the article "You Don't Have to Wipe the Whole Table: The Dirty
 Rectangle Technique in Canvas 2D". Instead of calling `clearRect(0, 0, W, H)` every

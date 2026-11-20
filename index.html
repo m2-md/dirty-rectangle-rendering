@@ -66,9 +66,41 @@
         font-size: 12px;
         line-height: 1.6;
       }
+      .mkare-demo-bar {
+        position: fixed;
+        bottom: 12px;
+        right: 12px;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.9);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        font-size: 12px;
+        line-height: 1;
+        color: #e2e8f0;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      }
+      .mkare-demo-bar a {
+        color: #38bdf8;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .mkare-demo-bar a:hover { text-decoration: underline; }
+      .mkare-demo-bar .sep { color: #64748b; }
     </style>
   </head>
   <body>
+    <nav class="mkare-demo-bar" aria-label="Article and resources">
+      <a href="https://medium.com/@mkare/no-need-to-wipe-the-whole-table-dirty-rectangle-rendering-in-canvas-2d-50de001bf7b1?sk=8798d90f87a4c6b379f6d18dc68fe93b" target="_blank" rel="noopener">Read Deep Dive (Free)</a>
+      <span class="sep">·</span>
+      <a href="https://www.buymeacoffee.com/mkare/e/599265" target="_blank" rel="noopener">Get Starter Kit</a>
+      <span class="sep">·</span>
+      <a href="https://github.com/m2-md/dirty-rectangle-rendering" target="_blank" rel="noopener">GitHub</a>
+    </nav>
     <h1>Dirty rectangle rendering — clear only what changed</h1>
 
     <!-- Layered canvas: bottom layer static, top layer moving -->
